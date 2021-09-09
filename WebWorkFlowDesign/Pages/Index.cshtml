@@ -1,0 +1,238 @@
+﻿@page
+@model IndexModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>流程设计器</title>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/lib/jquery-ui-1.11.4.custom/jquery-ui.css" rel="stylesheet" />
+    <link href="https://lib.baomitu.com/jsPlumb/2.15.6/css/jsplumbtoolkit-defaults.min.css" rel="stylesheet" />  
+    <script src="https://cdn.bootcss.com/node-uuid/1.4.8/uuid.min.js"></script>
+    <script src="https://cdn.bootcss.com/mustache.js/2.3.0/mustache.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/jquery-ui-1.11.4.custom/jquery-ui.js"></script>
+    <script src="https://cdn.bootcss.com/jsPlumb/1.7.6/jquery.jsPlumb.min.js"></script>
+   
+    
+    <script src="/js/workflow/js/graphlib.min.js"></script>
+    <script src="/js/workflow/js/data.js"></script>
+    <script src="/js/workflow/js/config.js"></script>
+    <script src="/js/workflow/js/index.js"></script>
+
+    <style>
+        .min-height {
+            height: 1800px;
+        }
+
+        .btn {
+            z-index: 2;
+        }
+
+        .pa {
+            position: absolute;
+        }
+
+        .fixed-node {
+            position: absolute;
+            top: 80px;
+            left: 150px;
+        }
+
+        #end-node {
+            left: 150px;
+            top: 700px;
+        }
+
+        .panel-node {
+            width: 150px;
+            display: inline-block;
+            margin: auto 25px;
+        }
+
+        .panel-node-list {
+            padding: 10px 10px;
+        }
+
+        .delete-node {
+            cursor: pointer;
+            width: 20px;
+            display: inline-block;
+            text-align: center;
+        }
+
+            .delete-node:hover {
+                color: red
+            }
+
+        .add-node {
+            cursor: pointer;
+            width: 20px;
+            display: inline-block;
+            text-align: center;
+        }
+
+            .add-node:hover {
+                color: red
+            }
+
+        .bg-info {
+            width: 12%
+        }
+
+        .bg-success {
+            width: 88%
+        }
+
+        .ml10 {
+            margin-left: 10px
+        }
+
+        .mt10 {
+            margin-top: 10px
+        }
+
+        .mt20 {
+            margin-top: 20px
+        }
+
+        .pl10 {
+            padding-left: 10px
+        }
+
+        .pr10 {
+            padding-right: 10px
+        }
+
+        hr {
+            opacity: 0.3;
+            border: 1px solid #999;
+        }
+
+        .nodeText {
+            width: 120px;
+            height: 30px;
+            margin: 10px 10px 10px 10px;
+        }
+
+        .p10 {
+            padding: 10px
+        }
+
+        .title {
+            padding: 10px 10px 0px 10px
+        }
+
+            .title p {
+                text-indent: 20px
+            }
+
+        .btnw {
+            width: 120px
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="container-fluid">
+            <div class="row">
+                <div id="side-buttons" class="col-md-1 bg-info min-height ">
+                    <div style="text-align:center;">
+                        <h2 class="mt20 ">节点列表</h2>
+                        <hr />
+                        <a class="btn btn-success btn-controler btnw" href="#" data-template="tpl-Normal" role="button">
+                            <i class="fa fa-square" aria-hidden="true"></i>
+                            节点
+                        </a> 
+                        <hr />
+                        <a id="export" class="btn btn-success mt10 btnw" href="#" role="button">
+                            <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                            导出
+                        </a>
+                    </div>
+                </div>
+                <div class="min-height">
+                    <div class="title"><p>提示：双击连接线可删除连接。</p></div>
+                    <div id="drop-bg" class="col-md-11 bg-success min-height">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script id="tpl-Normal" type="text/html">
+        <div class='pa' id='{{id}}' style='top:{{top}}px;left:{{left}}px; opacity: 0.6;'>
+
+            <a class='btn btn-default' href='#' role='button'>
+                <div>
+                    <input type="text" value="{{comment}}" tag="{{id}}" class="nodeText" />
+
+                    <span class="delete-node pull-right" data-type="deleteNode" data-id="{{id}}" style="font-size:10px;margin:0 -10px 0 0">X</span>
+                    @*<span class="add-node pull-right" data-type="addDragNode" data-id="{{id}}" style="font-size:10px;margin:0 5px 0 0">+</span>*@
+                </div>
+            </a>
+        </div>
+    </script>
+
+    <script id="tpl-Root" type="text/html">
+        <div class='pa' id='{{id}}' style='top:{{top}}px;left:{{left}}px;opacity: 0.6;'>
+            <a class='btn btn-success' href='#' role='button'>
+                <div style="width:80px;height:30px;line-height:35px">
+                    {{comment}}
+                    @*<span class="delete-node pull-right" data-type="deleteNode" data-id="{{id}}">X</span>*@
+                </div>
+            </a>
+        </div>
+    </script>
+
+    <script id="tpl-Exit" type="text/html">
+        <div class='pa' id='{{id}}' style='top:{{top}}px;left:{{left}}px'>
+            <a class='btn btn-danger' href='#' role='button'>
+                <div style="width:80px;height:30px;line-height:35px">
+                    {{comment}}
+                    @*<span class="delete-node pull-right" data-type="deleteNode" data-id="{{id}}">X</span>*@
+                </div>
+            </a>
+        </div>
+    </script>
+
+
+
+
+
+
+    <script>
+        $("#export").click(function () {
+            var json = window.FlowDeginer.exportToJson()
+            console.log(json)
+            alert(json);
+        })
+       
+
+        //let obj = $('#abc')[0];  //节点
+        ////添加节点为选中
+        //jsplumb.addToDragSelection(obj);
+        ////删除单个节点选中
+        //jsplumb.removeFromDragSelection(obj);
+        ////删除所有节点选中
+        //jsplumb.clearDragSelection();
+         
+
+    </script>
+
+
+
+
+
+</body>
+
+</html>
